@@ -20,8 +20,9 @@ with the exact target vermagic and Samsung KDP/RKP/DEFEX handling.
 
 The payload is **pinned to this exact build**: kernel symbol offsets differ
 between firmware builds. `root.sh` refuses to run on anything else. If you
-updated to a newer build, the profile must be re-derived first (see the
-porting record links below).
+updated to a newer build, re-derive the payload for it by following
+[PORTING.md](PORTING.md) — the complete step-by-step procedure with the
+tools in `tools/`.
 
 ## Usage
 
@@ -59,13 +60,24 @@ which the script leaves on the tablet) after each boot.
 - **`device unauthorized`**: accept the USB-debugging RSA prompt on the
   tablet (or revoke authorizations and replug).
 - **OTA updates**: do not accept a firmware update with a new kernel build
-  until the profile is re-ported for it.
+  until the payload is re-ported for it — see
+  [PORTING.md](PORTING.md) for the full re-porting procedure.
+
+## Porting to other firmware versions / devices
+
+Everything needed to re-derive this payload for a new build (after an OTA,
+or for other Samsung devices on kernel 5.10+ with BTF) is documented in
+[PORTING.md](PORTING.md): firmware identification and download, kernel
+extraction, symbol/BTF recovery, offset derivation (`tools/derive_offsets.py`),
+P0 fingerprint generation, the exploit build, the vermagic-exact KernelSU
+module rebuild, on-device validation, and the gotchas learned from the
+hardware bring-up.
 
 ## Provenance & credits
 
 - Port, builds, and hardware validation record for this device:
-  [docs/SM-X520-X520XXSACZH6.md](https://github.com/BuSung-dev/Root-My-Galaxy-Payloads/blob/main/docs/SM-X520-X520XXSACZH6.md)
-  (upstream PR form; identical content ships in the fork of that repo).
+  [docs/SM-X520-X520XXSACZH6.md](https://github.com/quillfinch/Root-My-Galaxy-Payloads/blob/main/docs/SM-X520-X520XXSACZH6.md)
+  in the payloads fork.
 - Exploit chain and per-target build system:
   [BuSung-dev/Root-My-Galaxy](https://github.com/BuSung-dev/Root-My-Galaxy)
   and [BuSung-dev/Root-My-Galaxy-Payloads](https://github.com/BuSung-dev/Root-My-Galaxy-Payloads)
@@ -77,11 +89,15 @@ which the script leaves on the tablet) after each boot.
   `ksud` here additionally accepts `late-load --ephemeral` as passed by the
   Root My Galaxy root helper.
 
-Binaries in `bin/` were built from the sources above with NDK r29 / the
-android15-6.6 DDK; `bin/x520.so` is the
-`essi-X520XXSACZH6` shell payload (SHA-256
-`fcc7bb493841ad96677fbe66262d8af360149a166750f78de55410af5be1a14d`) (see the payloads repo feed), `bin/ksud`
-embeds the vermagic-exact `6.6.102-android15-8-abX520XXSACZH6-4k` module.
+Binaries in `bin/` were built from the sources above with NDK r29 and the
+android15-6.6 DDK:
+
+- `bin/x520.so` — the `essi-X520XXSACZH6` shell payload, SHA-256
+  `fcc7bb493841ad96677fbe66262d8af360149a166750f78de55410af5be1a14d`
+- `bin/cve-2026-43499-root` — the root helper / umh daemon / late-load guard
+- `bin/ksud` — embeds the vermagic-exact
+  `6.6.102-android15-8-abX520XXSACZH6-4k` KernelSU module (no-patch-text
+  Samsung build, plus `late-load --ephemeral`)
 
 Use only on devices you own or are explicitly authorized to test.
 
